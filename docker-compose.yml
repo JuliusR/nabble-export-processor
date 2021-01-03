@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  jdbc_pg_backup:
+    build: jdbc_pg_backup
+    command: ./jdbc_pg_backup.sh -m restore -h postgres -P ${POSTGRES_PASSWORD} -f /DATA/original-export.zip
+    volumes:
+      - type: bind
+        source: ./DATA
+        target: /DATA
+
+  postgres:
+    image: postgres:9
+    environment:
+      - POSTGRES_PASSWORD
+      - NABBLE_EXPORT_PROCESSOR_SCHEMA
+    volumes:
+      - type: bind
+        source: ./postgres/docker-entrypoint-initdb.d
+        target: /docker-entrypoint-initdb.d
+      - type: bind
+        source: ./postgres/postprocess.sh
+        target: /POSTPROCESS.sh
+      - type: bind
+        source: ./DATA
+        target: /DATA
+
+  adminer:
+    image: adminer:latest
+    ports:
+      - 8080:8080
